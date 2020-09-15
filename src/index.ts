@@ -1,100 +1,71 @@
-import * as admin from 'firebase-admin';
+import * as admin from "firebase-admin";
+import typeDefs, {CollectionInput} from "./schema";
 
-const serviceAccount = require('../service-account.json');
+const serviceAccount = require("./service-account.json");
+// import * as serviceAccount from "./service-account.json";
+
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-import { ApolloServer, ApolloError, ValidationError, gql } from 'apollo-server';
-
-interface User {
-  id: string;
-  name: string;
-  screenName: string;
-  statusesCount: number;
-}
-
-interface Tweet {
-  id: string;
-  likes: number;
-  text: string;
-  userId: string;
-}
-
-const typeDefs = gql`
-  # A Twitter User
-  type User {
-    id: ID!
-    name: String!
-    screenName: String!
-    statusesCount: Int!
-    tweets: [Tweets]!
-  }
-
-  # A Tweet Object
-  type Tweets {
-    id: ID!
-    text: String!
-    userId: String!
-    user: User!
-    likes: Int!
-  }
-
-  type Query {
-    tweets: [Tweets]
-    user(id: String!): User
-  }
-`;
+const {ApolloServer, ApolloError, ValidationError} = require("apollo-server");
 
 const resolvers = {
   Query: {
-    async tweets() {
-      const tweets = await admin
-        .firestore()
-        .collection('tweets')
-        .get();
-      return tweets.docs.map(tweet => tweet.data()) as Tweet[];
+    async collections() {
+      const collections = await admin
+          .firestore()
+          .collection('collections')
+          .get();
+      return collections.docs.map(collection => collection.data());
     },
-    async user(_: null, args: { id: string }) {
-      try {
-        const userDoc = await admin
+    async getCollectionsByTitle(_: null, args: { title: string }) {
+      const {title} = args;
+      const collections = await admin
           .firestore()
-          .doc(`users/${args.id}`)
+          .collection('collections')
+          .where('collections/title', '==', title)
           .get();
-        const user = userDoc.data() as User | undefined;
-        return user || new ValidationError('User ID not found');
-      } catch (error) {
-        throw new ApolloError(error);
-      }
+
+      return collections.docs.map(collection => collection.data());
     }
+
   },
-  User: {
-    async tweets(user) {
+  Mutation: {
+    async setNewCollection(_: null, args: { input: CollectionInput }) {
       try {
-        const userTweets = await admin
-          .firestore()
-          .collection('tweets')
-          .where('userId', '==', user.id)
-          .get();
-        return userTweets.docs.map(tweet => tweet.data()) as Tweet[];
+        const data = {...args.input};
+        const collectionRef = admin.firestore()
+            .collection('collections');
+
+        const batch = admin
+            .firestore()
+            .batch();
+        const newDocRef = collectionRef.doc();
+
+        batch.set(newDocRef, data);
+        await batch.commit();
+        //Als Rückgabe Object sollte die ID zurückgegeben werden
+        return true;
       } catch (error) {
         throw new ApolloError(error);
       }
     }
-  },
-  Tweets: {
-    async user(tweet) {
-      try {
-        const tweetAuthor = await admin
-          .firestore()
-          .doc(`users/${tweet.userId}`)
-          .get();
-        return tweetAuthor.data() as User;
-      } catch (error) {
-        throw new ApolloError(error);
-      }
-    }
+    // async editCollection(collectionKey, objectsToAdd) {
+    //     try {
+    //         const batch = admin.firestore.batch();
+    //
+    //         const userTweets = await admin
+    //             .firestore()
+    //             .collection('tweets')
+    //             .where('userId', '==', user.id)
+    //             .get();
+    //         return userTweets.docs.map(tweet => tweet.data()) as Tweet[];
+    //     } catch (error) {
+    //         throw new ApolloError(error);
+    //     }
+    // }
   }
 };
 
@@ -102,11 +73,11 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   engine: {
-    apiKey: "<APOLLO ENGINE API KEY HERE>"
+    apiKey: ""
   },
   introspection: true
 });
 
-server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
+server.listen({port: process.env.PORT || 4000}).then(({url}) => {
   console.log(`🚀  Server ready at ${url}`);
 });

@@ -1,20 +1,34 @@
 {
-    "name": "functions",
-    "scripts": {
-        "build": "tsc",
-        "serve": "npm run build && node lib/index.js",
-        "start": "node lib/index.js",
-        "deploy": "npm run build && gcloud app deploy"
-    },
-    "main": "lib/index.js",
-    "dependencies": {
-        "apollo-server": "^2.0.0-rc.8",
-        "firebase-admin": "^5.12.1",
-        "graphql": "^0.13.2",
-        "graphql-tag": "^2.9.2"
-    },
-    "devDependencies": {
-        "tslint": "^5.10.0",
-        "typescript": "^2.9.2"
-    }
+  "name": "functions",
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && node lib/index.js",
+    "start": "node lib/index.js",
+    "deploy": "npm run build && gcloud app deploy"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "apollo-server": "^2.16.0",
+    "firebase-admin": "^8.13.0",
+    "graphql": "^15.3.0",
+    "graphql-tag": "^2.10.4"
+  },
+  "devDependencies": {
+    "@types/graphql": "^14.5.0",
+    "tslint": "^5.20.1",
+    "typescript": "^3.9.7"
+  },
+  "description": "An example of a [GraphQL](https://graphql.org/) setup with a Firebase Firestore backend. Uses [Apollo Engine/Server 2.0](https://www.apollographql.com/) and deployed to Google App Engine.",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arjunyel/firestore-apollo-graphql.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arjunyel/firestore-apollo-graphql/issues"
+  },
+  "homepage": "https://github.com/arjunyel/firestore-apollo-graphql#readme"
 }
